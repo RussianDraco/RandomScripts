@@ -14,6 +14,13 @@ def fully_int(sd):
 
 s_d = str(in_dec)
 
-#while not fully_int(s_d):
-#    pp = list(s_d).index(".")
-#    s_d = s_d.replace(".", "")
+while not fully_int(s_d):
+    pp = list(s_d).index(".") + 1
+    s_d = s_d.replace(".", "")
+    s_d = s_d[:pp] + "." + s_d[pp:]
+
+while s_d[-1] == 0:
+    s_d = s_d[:-1]
+
+s_d = int(s_d.replace(".", ""))
+
