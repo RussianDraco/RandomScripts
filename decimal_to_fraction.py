@@ -14,13 +14,29 @@ def fully_int(sd):
 
 s_d = str(in_dec)
 
+nof10 = 0
+
 while not fully_int(s_d):
     pp = list(s_d).index(".") + 1
     s_d = s_d.replace(".", "")
     s_d = s_d[:pp] + "." + s_d[pp:]
+    nof10+=1
 
 while s_d[-1] == 0:
     s_d = s_d[:-1]
 
 s_d = int(s_d.replace(".", ""))
 
+numer = s_d
+demon = 10 ** nof10
+
+for x in range(1, numer):
+    if numer % x == 0 and demon % x == 0:
+        numer /= x
+        demon /= x
+
+dash_num = max(len(list(str(int(numer)))), len(list(str(int(demon)))))
+
+print((dash_num - len(list(str(int(numer)))))//2 * " " + str(int(numer)))
+print(dash_num * "—")
+print(int(demon))
