@@ -30,7 +30,7 @@ s_d = int(s_d.replace(".", ""))
 numer = s_d
 demon = 10 ** nof10
 
-for x in range(numer//2 + 1, 2, -1):
+for x in range(numer//2 + 1, 1, -1):
     if numer % x == 0 and demon % x == 0:
         numer /= x
         demon /= x
