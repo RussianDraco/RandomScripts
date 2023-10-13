@@ -32,15 +32,18 @@ class FileSystemExplorer: #The Files Explorer Class
         directory = Directory(name)
         self.current_directory.subdirectories[name] = directory
 
+    def delete_file(self, name):
+        if self.current_directory.get(name) != None:
+            self.current_directory.subdirectories.pop(name)
+
     def change_directory(self, name): #Changes directory 
-        if name == "..":
-            # Move up one level
+        if name == "..": #move up one level
             if self.current_directory != self.root:
                 self.current_directory = self.root
         elif name in self.current_directory.subdirectories:
             self.current_directory = self.current_directory.subdirectories[name]
         else:
-            print(f"Directory '{name}' not found.")
+            print(f"Directory '{name}' not found")
 
     def list_contents(self):
         for name, directory in self.current_directory.subdirectories.items():
@@ -60,6 +63,10 @@ if __name__ == "__main__":
             explorer.create_file(command[1])
         elif command[0] == "mdir":
             explorer.create_directory(command[1])
+        elif command[0] == "delf":
+            explorer.delete_file(command[1])
+        elif command[0] == "deld":
+            explorer.delete_directory(command[1])
         elif command[0] == "cd":
             explorer.change_directory(command[1])
         elif command[0] == "ls":
@@ -67,8 +74,7 @@ if __name__ == "__main__":
         elif command[0] == "exit":
             break
         elif command[0] == "help":
-            for x in [('mf', 'Create a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('cd', 'Change working directory, takes name argument OR .. for step up'), ('ls', 'List file contents'), ('exit', 'Exit the system'), ('help', 'See this page')]:
-                c, e = x
+            for c, e in [('mf', 'Create a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cd', 'Change working directory, takes name argument OR .. for step up'), ('ls', 'List file contents'), ('exit', 'Exit the system'), ('help', 'See this page')]:
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
