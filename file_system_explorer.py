@@ -1,30 +1,38 @@
-from colorama import Fore
+from colorama import Fore # Color
 
-class File:
+#Hashmaps are used in form as inbuilt python dictionaries
+#The implementation of these hashmaps is used to efficently store subdirectories and files of a certain directory
+#Using hashmaps is more efficent than for example a normal list as it allows for more efficent searching/indexing of files and subdirectories
+
+#Trees are used as they make up the whole structure of the file explorer system/class
+#Trees are represented in the code as the subdirectories of subdirectories of subdirectories and the files that also pertain to some of those subdirectories
+#If you were to visually show all the subdirectories as they are connected in the code, you would see a clear tree/hierarchical structure as the files/directories are connected
+
+class File: #File Class
     def __init__(self, name, content=""):
         self.name = name
         self.content = content
 
-class Directory:
+class Directory: #Directory Class
     def __init__(self, name):
         self.name = name
         self.subdirectories = {}
         self.files = {}
 
-class FileSystemExplorer:
-    def __init__(self):
+class FileSystemExplorer: #The Files Explorer Class
+    def __init__(self): #initializes by creating a root directory
         self.root = Directory("root")
         self.current_directory = self.root
 
-    def create_file(self, name, content=""):
+    def create_file(self, name, content=""): #Makes a file given the name and content
         file = File(name, content)
         self.current_directory.files[name] = file
 
-    def create_directory(self, name):
+    def create_directory(self, name): #Makes a directory given a name
         directory = Directory(name)
         self.current_directory.subdirectories[name] = directory
 
-    def change_directory(self, name):
+    def change_directory(self, name): #Changes directory 
         if name == "..":
             # Move up one level
             if self.current_directory != self.root:
@@ -35,11 +43,10 @@ class FileSystemExplorer:
             print(f"Directory '{name}' not found.")
 
     def list_contents(self):
-        #print("Contents of", self.current_directory.name)
         for name, directory in self.current_directory.subdirectories.items():
             print(Fore.BLUE + name, end=" ")
         for name, file in self.current_directory.files.items():
-            print(Fore.RED + name, end=" ")
+            print(Fore.WHITE + name, end=" ")
         print("")
 
 if __name__ == "__main__":
