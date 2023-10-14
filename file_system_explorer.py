@@ -33,7 +33,11 @@ class FileSystemExplorer: #The Files Explorer Class
         self.current_directory.subdirectories[name] = directory
 
     def delete_file(self, name):
-        if self.current_directory.get(name) != None:
+        if self.current_directory.files.get(name) != None:
+            self.current_directory.files.pop(name)
+
+    def delete_directory(self, name):
+        if self.current_directory.subdirectories.get(name) != None:
             self.current_directory.subdirectories.pop(name)
 
     def change_directory(self, name): #Changes directory 
