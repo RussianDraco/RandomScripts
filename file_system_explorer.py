@@ -1,5 +1,6 @@
 from colorama import Fore # Color
 import json
+import os
 
 class dNode:
     def __init__(self, v, p = None, n = None):
@@ -141,6 +142,14 @@ class Directory: #Directory Class
         self.subdirectories = {}
         self.files = {}
 
+    def get_dir_dict(self): #a function to get info for the formation of the json file, returns a dict of its subdirs get_dir_dict and its files
+        out = {}
+        for name, directory in self.current_directory.subdirectories.items():
+            out["/" + name] = directory.get_dir_dict()
+
+        for name, file in self.current_directory.files.items():
+            out[name] = file.content
+
 class FileSystemExplorer: #The Files Explorer Class
     def __init__(self): #initializes by creating a root directory
         self.root = Directory("root", None)
@@ -152,8 +161,19 @@ class FileSystemExplorer: #The Files Explorer Class
 
         self.json_file = "system.json"
 
+        self.path_string = "/root"
+
     def update_json(self):
-        
+        data = {}
+        data["root"] = self.root.get_dir_dict()
+
+        print(str(data))
+
+        with open(self.json_file, 'w') as jf:
+            json.dump(data, jf)
+
+    def load_json(self):
+        pass
 
     def record_history(self, action):
         self.history.append_item(action)
@@ -161,6 +181,9 @@ class FileSystemExplorer: #The Files Explorer Class
     def create_file(self, name): #Makes a file given the name and content
         if name == "": 
             print("Invalid name")
+            return
+        elif name.startswith("/"):
+            print("Cannot include / in file name")
             return
         file = File(name)
         self.current_directory.files[name] = file
@@ -225,11 +248,14 @@ class FileSystemExplorer: #The Files Explorer Class
         if name == "/": #return to root
             if self.current_directory != self.root:
                 self.current_directory = self.root
+            self.path_string = "/root"
         elif name == "..":
             if self.current_directory.previous != None:
+                self.path_string = self.path_string.replace("/" + self.current_directory.name, "")
                 self.current_directory = self.current_directory.previous
         elif name in self.current_directory.subdirectories:
             self.current_directory = self.current_directory.subdirectories[name]
+            self.path_string += "/" + self.current_directory.name
         else:
             print(f"Directory '{name}' not found")
 
@@ -249,7 +275,7 @@ if __name__ == "__main__":
             explorer.set_edit_changes(explorer.wait_change_file, text)
             explorer.wait_change_file = None
 
-        print(Fore.GREEN + f"{explorer.current_directory.name}$", end=" ")
+        print(Fore.GREEN + f"{explorer.path_string}$", end=" ")
         inpt = input(Fore.WHITE).split()
 
         try:
