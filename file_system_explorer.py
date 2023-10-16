@@ -157,7 +157,7 @@ class FileSystemExplorer: #The Files Explorer Class
         self.root = Directory("root", None)
         self.current_directory = self.root
 
-        #self.history = DoublyLinkedList()
+        self.history = DoublyLinkedList()
 
         self.wait_change_file = None
 
@@ -165,15 +165,14 @@ class FileSystemExplorer: #The Files Explorer Class
 
         self.path_string = "/root"
 
-    def update_json(self):
-        data = {}
-        data["/root"] = self.root.get_dir_dict()
+    def update_json(self, returnDict = False):
+        data = {"/root":self.root.get_dir_dict()}
 
         with open(self.json_file, 'w') as jf:
             json.dump(data, jf)
         jf.close()
 
-    def json_dir_conv(self, dirName, dirDict, prevDir): #{"/a": {"/g": {"/j": {"/l": {"rr": "aa"}}}, "b": "abc"}}
+    def json_dir_conv(self, dirName, dirDict, prevDir):
         thisDir = Directory(dirName, prevDir)
 
         out = {}
@@ -184,6 +183,22 @@ class FileSystemExplorer: #The Files Explorer Class
                 thisDir.files[key] = File(key, value)
 
         return thisDir
+
+    def load_system_dict(self, pathString, dict):
+        for key, value in dict.items():
+            new_root = self.json_dir_conv(key, value, None)
+
+        self.path_string = pathString
+        self.root = new_root
+
+        if pathString == "/root":
+            self.current_directory = self.root
+        else:
+            currentDir = self.root
+            for d in pathString.replace("/root", "").split("/"):
+                currentDir = currentDir.subdirectories[d]
+
+            self.current_directory = currentDir
 
     def load_json(self):
         with open(self.json_file, 'r') as jf:
@@ -197,8 +212,11 @@ class FileSystemExplorer: #The Files Explorer Class
         self.root = new_root
         self.current_directory = self.root
 
-    def record_history(self, action):
-        self.history.append_item(action)
+    def snapshot_history(self, snap = None):
+        if snap != None:
+            self.history.append_item(snap)
+            return
+        self.history.append_item((self.path_string, {"/root":self.root.get_dir_dict()}))
 
     def create_file(self, name): #Makes a file given the name and content
         if name == "": 
@@ -328,12 +346,18 @@ if __name__ == "__main__":
             explorer.list_contents()
         elif command == "load":
             explorer.load_json()
+        elif command == "undo":
+            lastPathStr, lastSysDict = explorer.history.tail
+            explorer.load_system_dict(lastPathStr, lastSysDict)
+            explorer.history.removeTail()
         elif command == "exit":
             break
         elif command == "help":
-            for c, e in [('mf', 'Create a file, takes name argument'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('exit', 'Exit the system'), ('help', 'See this page')]:
+            for c, e in [('mf', 'Create a file, takes name argument'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('load', 'Load the file system from the last saved snapshot'), ('undo', 'Undo your last action'), ('exit', 'Exit the system'), ('help', 'See this page')]:
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
 
         explorer.update_json()
+        if (snap := (explorer.path_string, {"/root":explorer.root.get_dir_dict()})) != explorer.history.tail:
+            explorer.snapshot_history(snap)
