@@ -144,18 +144,20 @@ class Directory: #Directory Class
 
     def get_dir_dict(self): #a function to get info for the formation of the json file, returns a dict of its subdirs get_dir_dict and its files
         out = {}
-        for name, directory in self.current_directory.subdirectories.items():
+        for name, directory in self.subdirectories.items():
             out["/" + name] = directory.get_dir_dict()
 
-        for name, file in self.current_directory.files.items():
+        for name, file in self.files.items():
             out[name] = file.content
+
+        return out
 
 class FileSystemExplorer: #The Files Explorer Class
     def __init__(self): #initializes by creating a root directory
         self.root = Directory("root", None)
         self.current_directory = self.root
 
-        self.history = DoublyLinkedList()
+        #self.history = DoublyLinkedList()
 
         self.wait_change_file = None
 
@@ -165,15 +167,35 @@ class FileSystemExplorer: #The Files Explorer Class
 
     def update_json(self):
         data = {}
-        data["root"] = self.root.get_dir_dict()
-
-        print(str(data))
+        data["/root"] = self.root.get_dir_dict()
 
         with open(self.json_file, 'w') as jf:
             json.dump(data, jf)
+        jf.close()
+
+    def json_dir_conv(self, dirName, dirDict, prevDir): #{"/a": {"/g": {"/j": {"/l": {"rr": "aa"}}}, "b": "abc"}}
+        thisDir = Directory(dirName, prevDir)
+
+        out = {}
+        for key, value in dirDict.items():
+            if "/" in key:
+                thisDir.subdirectories[key.replace("/", "")] = self.json_dir_conv(key.replace("/", ""), value, thisDir)
+            else:
+                thisDir.files[key] = File(key, value)
+
+        return thisDir
 
     def load_json(self):
-        pass
+        with open(self.json_file, 'r') as jf:
+            data = json.load(jf)
+        jf.close()
+
+        for key, value in data.items():
+            new_root = self.json_dir_conv(key, value, None)
+
+        self.path_string = "/root"
+        self.root = new_root
+        self.current_directory = self.root
 
     def record_history(self, action):
         self.history.append_item(action)
@@ -304,6 +326,8 @@ if __name__ == "__main__":
             explorer.change_directory(arg)
         elif command == "ls":
             explorer.list_contents()
+        elif command == "load":
+            explorer.load_json()
         elif command == "exit":
             break
         elif command == "help":
@@ -311,3 +335,5 @@ if __name__ == "__main__":
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
+
+        explorer.update_json()
