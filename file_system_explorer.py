@@ -1,4 +1,5 @@
 from colorama import Fore # Color
+import json
 
 class dNode:
     def __init__(self, v, p = None, n = None):
@@ -134,19 +135,25 @@ class File: #File Class
         self.content = content
 
 class Directory: #Directory Class
-    def __init__(self, name):
+    def __init__(self, name, previous):
+        self.previous = previous
         self.name = name
         self.subdirectories = {}
         self.files = {}
 
 class FileSystemExplorer: #The Files Explorer Class
     def __init__(self): #initializes by creating a root directory
-        self.root = Directory("root")
+        self.root = Directory("root", None)
         self.current_directory = self.root
 
         self.history = DoublyLinkedList()
 
         self.wait_change_file = None
+
+        self.json_file = "system.json"
+
+    def update_json(self):
+        
 
     def record_history(self, action):
         self.history.append_item(action)
@@ -180,10 +187,13 @@ class FileSystemExplorer: #The Files Explorer Class
         if name == "":
             print("Invalid name")
             return
-        if name == "/":
+        elif name == "/":
             print("Cannot name directory /")
             return
-        directory = Directory(name)
+        elif name == "..":
+            print("Cannot name directory ..")
+            return
+        directory = Directory(name, self.current_directory)
         self.current_directory.subdirectories[name] = directory
 
     def delete_file(self, name):
@@ -215,6 +225,9 @@ class FileSystemExplorer: #The Files Explorer Class
         if name == "/": #return to root
             if self.current_directory != self.root:
                 self.current_directory = self.root
+        elif name == "..":
+            if self.current_directory.previous != None:
+                self.current_directory = self.current_directory.previous
         elif name in self.current_directory.subdirectories:
             self.current_directory = self.current_directory.subdirectories[name]
         else:
