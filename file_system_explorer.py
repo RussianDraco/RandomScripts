@@ -152,38 +152,67 @@ class FileSystemExplorer: #The Files Explorer Class
         self.history.append_item(action)
 
     def create_file(self, name): #Makes a file given the name and content
+        if name == "": 
+            print("Invalid name")
+            return
         file = File(name)
         self.current_directory.files[name] = file
         self.record_history("create:"+name)
 
     def edit_file(self, name):
-        if self.current_directory.files in self.current_directory.files:
+        if name == "":
+            print("Invalid name")
+            return
+        if name in self.current_directory.files:
             self.wait_change_file = name
             print(f"Editing file: `{name}`, enter content or submit exit to exit operation")
         else:
-            print("File dosent exit")
+            print("File dosent exist")
 
     def set_edit_changes(self, name, content):
         if content == "exit":
             print("Exiting operation...")
         else:
-            self.current_directory.files[self.wait_change_file].content = content
+            self.current_directory.files[name].content = content
             print("Changes created")
 
     def create_directory(self, name): #Makes a directory given a name
+        if name == "":
+            print("Invalid name")
+            return
+        if name == "/":
+            print("Cannot name directory /")
+            return
         directory = Directory(name)
         self.current_directory.subdirectories[name] = directory
 
     def delete_file(self, name):
+        if name == "":
+            print("Invalid name")
+            return
         if self.current_directory.files.get(name) != None:
             self.current_directory.files.pop(name)
 
     def delete_directory(self, name):
+        if name == "":
+            print("Invalid name")
+            return
         if self.current_directory.subdirectories.get(name) != None:
             self.current_directory.subdirectories.pop(name)
 
+    def cat_file(self, name):
+        if name == "":
+            print("Invalid name")
+            return
+        if name in self.current_directory.files:
+            if self.current_directory.files[name].content != None:
+                print(self.current_directory.files[name].content)
+
     def change_directory(self, name): #Changes directory 
-        if name == "..": #move up one level
+        if name == "":
+            print("Invalid name")
+            return
+        if name == "/": #return to root
             if self.current_directory != self.root:
                 self.current_directory = self.root
         elif name in self.current_directory.subdirectories:
@@ -202,29 +231,44 @@ if __name__ == "__main__":
     explorer = FileSystemExplorer()
     
     while True:
-        print(Fore.GREEN + f"{explorer.current_directory.name}$", end=" ")
-        command = input(Fore.WHITE).split()
-        
         if explorer.wait_change_file != None:
-            explorer.set_edit_changes(explorer.wait_change_file, command)
-        elif command[0] == "mf":
-            explorer.create_file(command[1])
-        elif command[0] == "edit":
-            explorer.edit_file(command[1])
-        elif command[0] == "mdir":
-            explorer.create_directory(command[1])
-        elif command[0] == "delf":
-            explorer.delete_file(command[1])
-        elif command[0] == "deld":
-            explorer.delete_directory(command[1])
-        elif command[0] == "cd":
-            explorer.change_directory(command[1])
-        elif command[0] == "ls":
+            text = input()
+            explorer.set_edit_changes(explorer.wait_change_file, text)
+            explorer.wait_change_file = None
+
+        print(Fore.GREEN + f"{explorer.current_directory.name}$", end=" ")
+        inpt = input(Fore.WHITE).split()
+
+        try:
+            command = inpt[0]
+        except IndexError:
+            command = ""
+
+        try:
+            arg = inpt[1]
+        except IndexError:
+            arg = ""
+        
+        if command == "mf":
+            explorer.create_file(arg)
+        elif command == "edit":
+            explorer.edit_file(arg)
+        elif command == "mdir":
+            explorer.create_directory(arg)
+        elif command == "delf":
+            explorer.delete_file(arg)
+        elif command == "deld":
+            explorer.delete_directory(arg)
+        elif command == "cat":
+            explorer.cat_file(arg)
+        elif command == "cd":
+            explorer.change_directory(arg)
+        elif command == "ls":
             explorer.list_contents()
-        elif command[0] == "exit":
+        elif command == "exit":
             break
-        elif command[0] == "help":
-            for c, e in [('mf', 'Create a file, takes name argument'), ('edit', 'Edit the contents of a file'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cd', 'Change working directory, takes name argument OR .. for step up'), ('ls', 'List file contents'), ('exit', 'Exit the system'), ('help', 'See this page')]:
+        elif command == "help":
+            for c, e in [('mf', 'Create a file, takes name argument'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('exit', 'Exit the system'), ('help', 'See this page')]:
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
