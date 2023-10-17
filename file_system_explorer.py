@@ -94,6 +94,12 @@ class DoublyLinkedList:
             return self.tail.val
         return None
     
+    def getValueBeforeTail(self):
+        if self.tail != None:
+            if self.tail.prev != None:
+                return self.tail.prev.val
+        return None
+    
     def getValAtNode(self, indx):
         if indx > self.count:
             return None
@@ -165,6 +171,8 @@ class FileSystemExplorer: #The Files Explorer Class
 
         self.path_string = "/root"
 
+        self.copied_file = None
+
     def update_json(self, returnDict = False):
         data = {"/root":self.root.get_dir_dict()}
 
@@ -195,7 +203,7 @@ class FileSystemExplorer: #The Files Explorer Class
             self.current_directory = self.root
         else:
             currentDir = self.root
-            for d in pathString.replace("/root", "").split("/"):
+            for d in pathString.replace("/root", "")[1:].split("/"):
                 currentDir = currentDir.subdirectories[d]
 
             self.current_directory = currentDir
@@ -225,9 +233,40 @@ class FileSystemExplorer: #The Files Explorer Class
         elif name.startswith("/"):
             print("Cannot include / in file name")
             return
+        elif self.current_directory.subdirectories.get(name) != None:
+            print("Directory with same name already exists")
+            return
         file = File(name)
         self.current_directory.files[name] = file
-        self.record_history("create:"+name)
+
+    def copy_file(self, name):
+        if (f := self.current_directory.subdirectories.get(name)) != None:
+            self.copied_file = f
+        elif (f := self.current_directory.files.get(name)) != None:
+            self.copied_file = f
+        else:
+            print("File or directory with such name dosent exist")
+
+    def paste_file(self):
+        if self.copied_file != None:
+            if self.copied_file.name in self.current_directory.subdirectories or self.copied_file.name in self.current_directory.files:
+                print("File or directory with such name already exists in this directory")
+                return
+
+            copied_is_dir = False
+            try:
+                temp = self.copied_file.files
+                copied_is_dir = True
+            except AttributeError:
+                pass
+            
+            if copied_is_dir:
+                self.current_directory.subdirectories[self.copied_file.name] = self.copied_file
+            else:
+                self.current_directory.files[self.copied_file.name] = self.copied_file
+
+        else:
+            print("No file or directory has been copied")
 
     def edit_file(self, name):
         if name == "":
@@ -255,6 +294,9 @@ class FileSystemExplorer: #The Files Explorer Class
             return
         elif name == "..":
             print("Cannot name directory ..")
+            return
+        elif self.current_directory.files.get(name) != None:
+            print("File with same name already exists")
             return
         directory = Directory(name, self.current_directory)
         self.current_directory.subdirectories[name] = directory
@@ -308,7 +350,7 @@ class FileSystemExplorer: #The Files Explorer Class
 
 if __name__ == "__main__":
     explorer = FileSystemExplorer()
-    
+
     while True:
         if explorer.wait_change_file != None:
             text = input()
@@ -332,6 +374,12 @@ if __name__ == "__main__":
             explorer.create_file(arg)
         elif command == "edit":
             explorer.edit_file(arg)
+        elif command == "copy":
+            explorer.copy_file(arg)
+        elif command == "paste":
+            explorer.paste_file()
+        elif command == "mv":
+            explorer.move_file(arg)
         elif command == "mdir":
             explorer.create_directory(arg)
         elif command == "delf":
@@ -347,17 +395,21 @@ if __name__ == "__main__":
         elif command == "load":
             explorer.load_json()
         elif command == "undo":
-            lastPathStr, lastSysDict = explorer.history.tail
-            explorer.load_system_dict(lastPathStr, lastSysDict)
-            explorer.history.removeTail()
+            lastHistorySnap = explorer.history.getValueBeforeTail()
+            if lastHistorySnap != None:
+                lastPathStr, lastSysDict = lastHistorySnap
+                explorer.load_system_dict(lastPathStr, lastSysDict)
+                explorer.history.removeTail()
+            else:
+                print("No history before this")
         elif command == "exit":
             break
         elif command == "help":
-            for c, e in [('mf', 'Create a file, takes name argument'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('load', 'Load the file system from the last saved snapshot'), ('undo', 'Undo your last action'), ('exit', 'Exit the system'), ('help', 'See this page')]:
+            for c, e in [('mf', 'Create a file, takes name argument'), ('copy', 'Copy a file or directory, takes name argument'), ('paste', 'Paste the last copied file or directory into current working directory'), ('mv', 'Move a file or directory, takes a location/name argument of new location'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('load', 'Load the file system from the last saved snapshot'), ('undo', 'Undo your last action'), ('exit', 'Exit the system'), ('help', 'See this page')]:
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
 
         explorer.update_json()
-        if (snap := (explorer.path_string, {"/root":explorer.root.get_dir_dict()})) != explorer.history.tail:
+        if (snap := (explorer.path_string, {"/root":explorer.root.get_dir_dict()})) != explorer.history.getTailValue():
             explorer.snapshot_history(snap)
