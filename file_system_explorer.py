@@ -141,6 +141,10 @@ class File: #File Class
         self.name = name
         self.content = content
 
+    #gives copy of this file with contents
+    def copy(self):
+        return File(self.name, self.content)
+
 class Directory: #Directory Class
     def __init__(self, name, previous):
         self.previous = previous
@@ -148,7 +152,9 @@ class Directory: #Directory Class
         self.subdirectories = {}
         self.files = {}
 
-    def get_dir_dict(self): #a function to get info for the formation of the json file, returns a dict of its subdirs get_dir_dict and its files
+    #a function to get info for the formation of the json file, returns a dict of its subdirs get_dir_dict and its files
+    #runs recursively when subdirs are present
+    def get_dir_dict(self): 
         out = {}
         for name, directory in self.subdirectories.items():
             out["/" + name] = directory.get_dir_dict()
@@ -157,6 +163,20 @@ class Directory: #Directory Class
             out[name] = file.content
 
         return out
+    
+    #provide an identical copy of the directory with identical contents, used for copy/pasting so that pointers dont point back to original
+    def copy(self, copyPrev):
+        copyDir = Directory(self.name, copyPrev)
+        if len(self.subdirectories) > 0:
+            for dname, subdir in self.subdirectories.items():
+                c = subdir.copy(copyDir)
+                copyDir.subdirectories[dname] = c
+        if len(self.files) > 0:
+            print(str)
+            for fname, file in self.files.items():
+                c = file.copy()
+                copyDir.files[fname] = c
+        return copyDir
 
 class FileSystemExplorer: #The Files Explorer Class
     def __init__(self): #initializes file system by creating a root directory
@@ -221,13 +241,14 @@ class FileSystemExplorer: #The Files Explorer Class
         self.root = new_root
         self.current_directory = self.root
 
-    def snapshot_history(self, snap = None): #function to save a snapshot of the current file explorer into the history linked list
+    #function to save a snapshot of the current file explorer into the history linked list
+    #snap is used when sometimes the history snapshot was already calculated elsewhere in code and provided to this function to avoid redundant recalculations
+    def snapshot_history(self, snap = None):
         if snap != None:
             print(str(snap))
             self.history.append_item(snap)
             return
         self.history.append_item((self.path_string, {"/root":self.root.get_dir_dict()}))
-        print(str((self.path_string, {"/root":self.root.get_dir_dict()})))
 
     def create_file(self, name): #creates a file in the current working directory with a name and empty content
         if name == "": 
@@ -264,7 +285,7 @@ class FileSystemExplorer: #The Files Explorer Class
                 pass
             
             if copied_is_dir:
-                self.current_directory.subdirectories[self.copied_file.name] = self.copied_file
+                self.current_directory.subdirectories[self.copied_file.name] = self.copied_file.copy(self.current_directory)
             else:
                 self.current_directory.files[self.copied_file.name] = self.copied_file
 
