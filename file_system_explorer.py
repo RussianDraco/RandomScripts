@@ -178,7 +178,7 @@ class Directory: #Directory Class
                 copyDir.files[fname] = c
         return copyDir
 
-class FileSystemExplorer: #The Files Explorer Class
+class FileSystemExplorer: #the file system explorer
     def __init__(self): #initializes file system by creating a root directory
         self.root = Directory("root", None)
         self.current_directory = self.root
