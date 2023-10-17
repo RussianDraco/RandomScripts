@@ -159,27 +159,28 @@ class Directory: #Directory Class
         return out
 
 class FileSystemExplorer: #The Files Explorer Class
-    def __init__(self): #initializes by creating a root directory
+    def __init__(self): #initializes file system by creating a root directory
         self.root = Directory("root", None)
         self.current_directory = self.root
 
-        self.history = DoublyLinkedList()
+        self.history = DoublyLinkedList() #a series of hashmaps that contain all information about the files/directories, used for undo function
 
-        self.wait_change_file = None
+        self.wait_change_file = None #variable used for editing files
 
-        self.json_file = "system.json"
+        self.json_file = "system.json" #file containing the files/directories to hold info in storage between runs of this script
 
-        self.path_string = "/root"
+        self.path_string = "/root" #starting path
 
-        self.copied_file = None
+        self.copied_file = None #used to store copied files/dirs
 
-    def update_json(self, returnDict = False):
+    def update_json(self, returnDict = False): #function to update system.json with files/dirs after every command
         data = {"/root":self.root.get_dir_dict()}
 
         with open(self.json_file, 'w') as jf:
             json.dump(data, jf)
         jf.close()
 
+    #converts a dictionary into directories with subdirectories and files with content, used for loading json file info into system explorer
     def json_dir_conv(self, dirName, dirDict, prevDir):
         thisDir = Directory(dirName, prevDir)
 
@@ -192,7 +193,7 @@ class FileSystemExplorer: #The Files Explorer Class
 
         return thisDir
 
-    def load_system_dict(self, pathString, dict):
+    def load_system_dict(self, pathString, dict): #function to load a dictionary into the file system, usually used for loading in history snapshots(undo command)
         for key, value in dict.items():
             new_root = self.json_dir_conv(key, value, None)
 
@@ -208,7 +209,7 @@ class FileSystemExplorer: #The Files Explorer Class
 
             self.current_directory = currentDir
 
-    def load_json(self):
+    def load_json(self): #complete function to load system.json into file explorer
         with open(self.json_file, 'r') as jf:
             data = json.load(jf)
         jf.close()
@@ -220,13 +221,15 @@ class FileSystemExplorer: #The Files Explorer Class
         self.root = new_root
         self.current_directory = self.root
 
-    def snapshot_history(self, snap = None):
+    def snapshot_history(self, snap = None): #function to save a snapshot of the current file explorer into the history linked list
         if snap != None:
+            print(str(snap))
             self.history.append_item(snap)
             return
         self.history.append_item((self.path_string, {"/root":self.root.get_dir_dict()}))
+        print(str((self.path_string, {"/root":self.root.get_dir_dict()})))
 
-    def create_file(self, name): #Makes a file given the name and content
+    def create_file(self, name): #creates a file in the current working directory with a name and empty content
         if name == "": 
             print("Invalid name")
             return
@@ -239,7 +242,7 @@ class FileSystemExplorer: #The Files Explorer Class
         file = File(name)
         self.current_directory.files[name] = file
 
-    def copy_file(self, name):
+    def copy_file(self, name): #function to copy a file or directory, sets the copied_file field to that file/dir
         if (f := self.current_directory.subdirectories.get(name)) != None:
             self.copied_file = f
         elif (f := self.current_directory.files.get(name)) != None:
@@ -247,7 +250,7 @@ class FileSystemExplorer: #The Files Explorer Class
         else:
             print("File or directory with such name dosent exist")
 
-    def paste_file(self):
+    def paste_file(self): #pastes the copied_file field into the current working directory
         if self.copied_file != None:
             if self.copied_file.name in self.current_directory.subdirectories or self.copied_file.name in self.current_directory.files:
                 print("File or directory with such name already exists in this directory")
@@ -268,7 +271,7 @@ class FileSystemExplorer: #The Files Explorer Class
         else:
             print("No file or directory has been copied")
 
-    def move_file(self, arg):
+    def move_file(self, arg): #moves a file/dir from the current working directory to the defined path, i.e. file named A in /root folder moved to /root/cool/A
         moving_objName = arg.split('/')[-1]
         moving_obj = None
         file_is_dir = False
@@ -282,14 +285,16 @@ class FileSystemExplorer: #The Files Explorer Class
             print(f"File or directory with name {moving_objName} dosent exist in current working directory")
             return
 
-        end_path = moving_objName.replace("/" + moving_objName, "")
+        end_path = arg.replace("/" + moving_objName, "")
         end_dir = None
 
         if end_path == "/root":
             end_dir = self.root
         else:
             end_dir = self.root
+            print(end_path)
             for d in end_path.replace("/root", "")[1:].split("/"):
+                print(str(end_path.replace("/root", "")[1:].split("/")))
                 end_dir = end_dir.subdirectories[d]
 
         if moving_objName in end_dir.subdirectories or moving_objName in end_dir.files:
@@ -303,7 +308,7 @@ class FileSystemExplorer: #The Files Explorer Class
             end_dir.files[moving_objName] = moving_obj
             self.current_directory.files.pop(moving_objName)
 
-    def edit_file(self, name):
+    def edit_file(self, name): #function to edit the contents of a file, asks for a prompt and then creates changes with set_edit_changes
         if name == "":
             print("Invalid name")
             return
@@ -313,14 +318,14 @@ class FileSystemExplorer: #The Files Explorer Class
         else:
             print("File dosent exist")
 
-    def set_edit_changes(self, name, content):
+    def set_edit_changes(self, name, content): #system function that applies the edit input into the file
         if content == "exit":
             print("Exiting operation...")
         else:
             self.current_directory.files[name].content = content
             print("Changes created")
 
-    def create_directory(self, name): #Makes a directory given a name
+    def create_directory(self, name): #makes a directory given a name
         if name == "":
             print("Invalid name")
             return
@@ -336,21 +341,21 @@ class FileSystemExplorer: #The Files Explorer Class
         directory = Directory(name, self.current_directory)
         self.current_directory.subdirectories[name] = directory
 
-    def delete_file(self, name):
+    def delete_file(self, name): #deletes a file from cwd
         if name == "":
             print("Invalid name")
             return
         if self.current_directory.files.get(name) != None:
             self.current_directory.files.pop(name)
 
-    def delete_directory(self, name):
+    def delete_directory(self, name): #delete a dir from cwd
         if name == "":
             print("Invalid name")
             return
         if self.current_directory.subdirectories.get(name) != None:
             self.current_directory.subdirectories.pop(name)
 
-    def cat_file(self, name):
+    def cat_file(self, name): #read the contents of a file
         if name == "":
             print("Invalid name")
             return
@@ -358,7 +363,7 @@ class FileSystemExplorer: #The Files Explorer Class
             if self.current_directory.files[name].content != None:
                 print(self.current_directory.files[name].content)
 
-    def change_directory(self, name): #Changes directory 
+    def change_directory(self, name): #changes cwd
         if name == "":
             print("Invalid name")
             return
@@ -376,35 +381,40 @@ class FileSystemExplorer: #The Files Explorer Class
         else:
             print(f"Directory '{name}' not found")
 
-    def list_contents(self):
+    def list_contents(self): #lists the contents of a file, all subdirs and files
         for name, directory in self.current_directory.subdirectories.items():
             print(Fore.BLUE + name, end=" ")
         for name, file in self.current_directory.files.items():
             print(Fore.WHITE + name, end=" ")
         print("")
 
-if __name__ == "__main__":
-    explorer = FileSystemExplorer()
+if __name__ == "__main__": #main run function
+    explorer = FileSystemExplorer() #inits the file system explorer class
 
-    while True:
-        if explorer.wait_change_file != None:
+    explorer.snapshot_history() #creates an init history snapshot
+
+    while True: #main running loop
+        if explorer.wait_change_file != None: #if the system is waiting for the contents of a file to be inputted, handle that
             text = input()
             explorer.set_edit_changes(explorer.wait_change_file, text)
             explorer.wait_change_file = None
 
-        print(Fore.GREEN + f"{explorer.path_string}$", end=" ")
-        inpt = input(Fore.WHITE).split()
+        print(Fore.GREEN + f"{explorer.path_string}$", end=" ") #prints the cwd path
+        inpt = input(Fore.WHITE).split() #gets input from the user
 
+        #gets the command part of the input, if there is an exception(there is no command), set it to an empty str
         try:
             command = inpt[0]
         except IndexError:
             command = ""
 
+        #gathers any argument that was also given with a command, usually a name argument
         try:
             arg = inpt[1]
         except IndexError:
             arg = ""
         
+        #checks through all possible commands that is inputted or otherwise reply that its not a real command and advise to use help command
         if command == "mf":
             explorer.create_file(arg)
         elif command == "edit":
@@ -445,6 +455,7 @@ if __name__ == "__main__":
         else:
             print("Invalid command. Use help for available commands")
 
+        #update the system.json file and update the history linked list if something changed
         explorer.update_json()
         if (snap := (explorer.path_string, {"/root":explorer.root.get_dir_dict()})) != explorer.history.getTailValue():
             explorer.snapshot_history(snap)
