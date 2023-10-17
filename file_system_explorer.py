@@ -230,7 +230,7 @@ class FileSystemExplorer: #The Files Explorer Class
         if name == "": 
             print("Invalid name")
             return
-        elif name.startswith("/"):
+        elif '/' in name:
             print("Cannot include / in file name")
             return
         elif self.current_directory.subdirectories.get(name) != None:
@@ -268,6 +268,41 @@ class FileSystemExplorer: #The Files Explorer Class
         else:
             print("No file or directory has been copied")
 
+    def move_file(self, arg):
+        moving_objName = arg.split('/')[-1]
+        moving_obj = None
+        file_is_dir = False
+
+        if (f := self.current_directory.subdirectories.get(moving_objName)) != None:
+            moving_obj = f
+            file_is_dir = True
+        elif (f := self.current_directory.files.get(moving_objName)) != None:
+            moving_obj = f
+        else:
+            print(f"File or directory with name {moving_objName} dosent exist in current working directory")
+            return
+
+        end_path = moving_objName.replace("/" + moving_objName, "")
+        end_dir = None
+
+        if end_path == "/root":
+            end_dir = self.root
+        else:
+            end_dir = self.root
+            for d in end_path.replace("/root", "")[1:].split("/"):
+                end_dir = end_dir.subdirectories[d]
+
+        if moving_objName in end_dir.subdirectories or moving_objName in end_dir.files:
+            print("Object with such name already exists in destination directory")
+            return
+
+        if file_is_dir:
+            end_dir.subdirectories[moving_objName] = moving_obj
+            self.current_directory.subdirectories.pop(moving_objName)
+        else:
+            end_dir.files[moving_objName] = moving_obj
+            self.current_directory.files.pop(moving_objName)
+
     def edit_file(self, name):
         if name == "":
             print("Invalid name")
@@ -289,8 +324,8 @@ class FileSystemExplorer: #The Files Explorer Class
         if name == "":
             print("Invalid name")
             return
-        elif name == "/":
-            print("Cannot name directory /")
+        elif '/' in name:
+            print("Cannot include / in directory name")
             return
         elif name == "..":
             print("Cannot name directory ..")
@@ -405,7 +440,7 @@ if __name__ == "__main__":
         elif command == "exit":
             break
         elif command == "help":
-            for c, e in [('mf', 'Create a file, takes name argument'), ('copy', 'Copy a file or directory, takes name argument'), ('paste', 'Paste the last copied file or directory into current working directory'), ('mv', 'Move a file or directory, takes a location/name argument of new location'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('load', 'Load the file system from the last saved snapshot'), ('undo', 'Undo your last action'), ('exit', 'Exit the system'), ('help', 'See this page')]:
+            for c, e in [('mf', 'Create a file, takes name argument'), ('copy', 'Copy a file or directory, takes name argument'), ('paste', 'Paste the last copied file or directory into current working directory'), ('mv', 'Move a file or directory, takes a location/name argument of file in new location'), ('edit', 'Edit the contents of a file, takes name argument'), ('mdir', 'Create a dir, takes name argument'), ('delf', 'Delete a file, takes name argument'), ('deld', 'Delete a directory, takes name argument'), ('cat', 'Read contents of a file, takes name argument'), ('cd', 'Change working directory, takes name argument OR / to return to root'), ('ls', 'List file contents'), ('load', 'Load the file system from the last saved snapshot'), ('undo', 'Undo your last action'), ('exit', 'Exit the system'), ('help', 'See this page')]:
                 print(c + " | " + e)
         else:
             print("Invalid command. Use help for available commands")
