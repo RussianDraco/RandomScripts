@@ -171,7 +171,7 @@ class Directory: #Directory Class
             for dname, subdir in self.subdirectories.items():
                 c = subdir.copy(copyDir)
                 copyDir.subdirectories[dname] = c
-        if len(self.files) > 0
+        if len(self.files) > 0:
             for fname, file in self.files.items():
                 c = file.copy()
                 copyDir.files[fname] = c
