@@ -171,8 +171,7 @@ class Directory: #Directory Class
             for dname, subdir in self.subdirectories.items():
                 c = subdir.copy(copyDir)
                 copyDir.subdirectories[dname] = c
-        if len(self.files) > 0:
-            print(str)
+        if len(self.files) > 0
             for fname, file in self.files.items():
                 c = file.copy()
                 copyDir.files[fname] = c
@@ -245,7 +244,6 @@ class FileSystemExplorer: #the file system explorer
     #snap is used when sometimes the history snapshot was already calculated elsewhere in code and provided to this function to avoid redundant recalculations
     def snapshot_history(self, snap = None):
         if snap != None:
-            print(str(snap))
             self.history.append_item(snap)
             return
         self.history.append_item((self.path_string, {"/root":self.root.get_dir_dict()}))
