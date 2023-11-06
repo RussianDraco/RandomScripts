@@ -60,5 +60,3 @@ class Hashmap:
     def printMap(self):
         for x in self.holder:
             print(str(x))
-    
-hm = Hashmap(10)
