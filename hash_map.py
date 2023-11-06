@@ -62,15 +62,3 @@ class Hashmap:
             print(str(x))
     
 hm = Hashmap(10)
-
-hm.addValue("Tim", "1")
-hm.addValue("Len", "2")
-hm.addValue("aaaaaaaaaaaaaaaaaaaaaa", "3")
-hm.addValue("a", "4")
-hm.addValue("c", "5")
-hm.addValue("@", "6")
-
-print(hm.getValue("@")) #1
-print(hm.getValue("Tim")) #2
-print(hm.getValue("Len")) #3
-print(hm.getValue("aaaaaaaaaaaaaaaaaaaaaa")) #6
