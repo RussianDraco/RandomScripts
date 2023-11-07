@@ -1,5 +1,3 @@
-#from linked_list import *
-
 class Hashmap:
     def __init__(self, length):
         self.length = length
