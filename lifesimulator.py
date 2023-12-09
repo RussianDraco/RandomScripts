@@ -18,8 +18,8 @@ ASEXUAL_FOOD_THRESHOLD = 200
 SYNTHESIS_DELAY = 250 #ms
 
 RESPAWN_FROM_BEST = True
-RESPAWN_POP = 75
-MAX_POP = 150
+RESPAWN_POP = 50
+MAX_POP = 100
 
 FPS = 999 #999 for max
 
@@ -140,7 +140,7 @@ class DNA:
     @staticmethod
     def random_dna():
         dna = DNA()
-        for x in range(random.randint(3, 15)):
+        for _ in range(random.randint(3, 15)):
             dna.parts[choose_adjacent_coord(dna.parts.keys())] = random.randint(0, body_partNum-1)
         dna.brain = NeuralNetwork(random.randint(1, 3), random.randint(1, 5), random.randint(1, 3))
         return dna
